@@ -84,7 +84,7 @@ int main() {
   int bus, device, function;
   int i, j;
 
-  printf("This binary is build exclusively for %s.\n", arch);
+  printf("This binary is built exclusively for %s.\n", arch);
   printf("For other micro architectures, specify -DARCH (e.g. -DSKYLAKE) at the compile time.\n\n");
   
   struct iMC** iMCs = malloc(sizeof(struct iMC*) * n_nodes_max);
