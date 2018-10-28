@@ -22,6 +22,6 @@ channel 5: /proc/bus/pci/98/0c.6
 channel 6: /proc/bus/pci/98/0d.2
 ```
 
-You can then read from/write to the lited files to configure memory controller performance monitoring.
+You can then read from/write to the listed files to configure memory controller performance monitoring.
 
 The code is based on a sample provided in Section 1.9 of [Intel Xeon Processor Scalable Memory Family Uncore Performance Monitoring Reference Manual](https://software.intel.com/en-us/download/intel-xeon-processor-scalable-memory-family-uncore-performance-monitoring-reference-manual).
