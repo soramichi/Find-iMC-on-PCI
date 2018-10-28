@@ -45,7 +45,6 @@ __attribute__((constructor)) static void warn() {
 #endif
 
 const int n_nodes_max = 8;             // normal ones, do not assume special machines like SGI or Cray
-const int n_channels_per_node_max = 6; // skylake
 
 void pci_read(int bus, int device, int function, off_t offset, void* data, size_t size){
   ssize_t ret;
@@ -90,8 +89,8 @@ int main() {
   
   struct iMC** iMCs = malloc(sizeof(struct iMC*) * n_nodes_max);
   for(i=0; i<n_nodes_max; i++) {
-    iMCs[i] = malloc(sizeof(struct iMC) * n_channels_per_node_max);
-    memset(iMCs[i], 0, sizeof(struct iMC) * n_channels_per_node_max);
+    iMCs[i] = malloc(sizeof(struct iMC) * n_channels);
+    memset(iMCs[i], 0, sizeof(struct iMC) * n_channels);
   }
 
   int node = 0, channel = 0;
