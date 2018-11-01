@@ -15,32 +15,26 @@
 // https://software.intel.com/en-us/forums/software-tuning-performance-optimization-platform-monitoring/topic/742765
 #if defined(SKYLAKE)
 const unsigned int IMC_DID[] = {0x2042, 0x2046, 0x204A};
-const int n_channels = 6;
 const char* arch = "Skylake";
 
 #elif defined(BROADWELL)
 const unsigned int IMC_DID[] = {0x6fb0, 0x6fb1, 0x6fb4, 0x6fb5};
-const int n_channels = 4;
 const char* arch = "Broadwell";
 
 #elif defined(HASWELL)
 const unsigned int IMC_DID[] = {0x2fb0, 0x2fb1, 0x2fd0, 0x2fd1};
-const int n_channels = 4;
 const char* arch = "Haswell";
 
 #elif defined(IVYBRIDGE)
 const unsigned int IMC_DID[] = {0x0eb0, 0x0eb1, 0x0eb4, 0x0eb5};
-const int n_channels = 4;
 const char* arch = "Ivy Bridge";
 
 #elif defined(SANDYBRIDGE)
 const unsigned int IMC_DID[] = {0x3cb0, 0x3cb1, 0x3cb4, 0x3cb5};
-const int n_channels = 4;
 const char* arch = "Sandy Bridge";
 
 #else // Error
 const unsigned int IMC_DID[] = {};
-const int n_channels = 0;
 const char* arch = "";
 __attribute__((constructor)) static void warn() {
   fprintf(stderr, "You should specify either -DSKYLAKE, -DBROADWELL, -DHASWELL, or -DIVYBRIDGE at the compile time.\n");
@@ -50,6 +44,7 @@ __attribute__((constructor)) static void warn() {
 #endif
 
 const int n_nodes_max = 8; // normal machines, do not assume special ones like SGI or Cray
+const int n_channels_max = 6; // Skylake
 
 void pci_read(int bus, int device, int function, off_t offset, void* data, size_t size){
   ssize_t ret;
@@ -121,11 +116,12 @@ int main() {
   
   struct iMC** iMCs = malloc(sizeof(struct iMC*) * n_nodes_max);
   for(i=0; i<n_nodes_max; i++) {
-    iMCs[i] = malloc(sizeof(struct iMC) * n_channels);
-    memset(iMCs[i], 0, sizeof(struct iMC) * n_channels);
+    iMCs[i] = malloc(sizeof(struct iMC) * n_channels_max);
+    memset(iMCs[i], 0, sizeof(struct iMC) * n_channels_max);
   }
 
-  int channel = 0, n_nodes = 0;
+  int channel_index[n_nodes_max]; // initizlied by 0s
+  int n_nodes = 0, n_channels = 0;
   for (bus = 0; bus < 256; bus++) {
     for (device = 0; device < 32; device++) {
       for (function = 0; function < 8; function++) {
@@ -141,11 +137,13 @@ int main() {
 	  if (device_id == IMC_DID[i]) {  // found an iMC
 	    struct iMC imc = {.bus_no = bus, .device_no = device, .function_no = function};
 	    int node = get_numa_node(bus, device, function);
-	    iMCs[node][channel] = imc;
-	    channel = (channel + 1) % n_channels;
+	    int channel = channel_index[node]++;
 
+	    iMCs[node][channel] = imc;
 	    if (node > n_nodes)
 	      n_nodes = node;
+	    if (channel > n_channels)
+	      n_channels = channel; // assume every node has the same number of channels populated (which is almost always true)
 	  }
 	}
       }
@@ -154,7 +152,7 @@ int main() {
 
   for(i = 0; i <= n_nodes; i++) {
     printf("node %d\n", i);
-    for(j = 0; j<n_channels; j++) {
+    for(j = 0; j <=  n_channels; j++) {
       printf("channel %d: /proc/bus/pci/%x/%02x.%x\n", j+1, iMCs[i][j].bus_no, iMCs[i][j].device_no, iMCs[i][j].function_no);
     }
   }
