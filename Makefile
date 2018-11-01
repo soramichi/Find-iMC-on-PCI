@@ -13,5 +13,8 @@ haswell:
 ivybridge:
 	gcc find_imc.c -o find_imc -DIVYBRIDGE
 
+sandybridge:
+	gcc find_imc.c -o find_imc -DSANDYBRIDGE
+
 clean:
 	rm -rf find_imc *~

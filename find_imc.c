@@ -33,6 +33,11 @@ const unsigned int IMC_DID[] = {0x0eb0, 0x0eb1, 0x0eb4, 0x0eb5};
 const int n_channels = 4;
 const char* arch = "Ivy Bridge";
 
+#elif defined(SANDYBRIDGE)
+const unsigned int IMC_DID[] = {0x3cb0, 0x3cb1, 0x3cb4, 0x3cb5};
+const int n_channels = 4;
+const char* arch = "Sandy Bridge";
+
 #else // Error
 const unsigned int IMC_DID[] = {};
 const int n_channels = 0;
