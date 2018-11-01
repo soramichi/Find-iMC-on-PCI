@@ -79,6 +79,33 @@ unsigned long pci_read_ulong(int bus, int device, int function, int offset){
   return ret;
 }
 
+int get_numa_node(int bus, int device, int function) {
+  int numa_node;
+  char filename[128], buff[8];
+  FILE* fp;
+
+  sprintf(filename, "/sys/devices/pci0000:%x/0000:%x:%02x.%x/numa_node", bus, bus, device, function);
+  // use FILE* instead of a bare fd because the file contains a string of ascii chatacters with un-constant length
+  fp = fopen(filename, "r");
+
+  if (fp == NULL){
+    perror("");
+    fprintf(stderr, "Error while opening %s\n", filename);
+    return -1;
+  }
+
+  fgets(buff, sizeof(buff), fp);
+  numa_node = atoi(buff);
+  fclose(fp);
+  
+  if (numa_node == -1) {
+    // -1 is somehow returned when the system has only 1 socket
+    numa_node = 0;
+  }
+
+  return numa_node;
+}
+
 struct iMC{
   int bus_no;
   int device_no;
@@ -98,7 +125,7 @@ int main() {
     memset(iMCs[i], 0, sizeof(struct iMC) * n_channels);
   }
 
-  int node = 0, channel = 0;
+  int channel = 0, n_nodes = 0;
   for (bus = 0; bus < 256; bus++) {
     for (device = 0; device < 32; device++) {
       for (function = 0; function < 8; function++) {
@@ -113,22 +140,19 @@ int main() {
 	for (i=0; i<sizeof(IMC_DID); i++) {
 	  if (device_id == IMC_DID[i]) {  // found an iMC
 	    struct iMC imc = {.bus_no = bus, .device_no = device, .function_no = function};
+	    int node = get_numa_node(bus, device, function);
 	    iMCs[node][channel] = imc;
+	    channel = (channel + 1) % n_channels;
 
-	    channel++;
-	    // We assume that every channel (not necessarily every DIMM slot) of a node is populated.
-	    // Otherwide, how do we know which node a channel belongs??
-	    if (channel == n_channels) {
-	      node++;
-	      channel = 0;
-	    }
+	    if (node > n_nodes)
+	      n_nodes = node;
 	  }
 	}
       }
     }
   }
 
-  for(i = 0; i<node; i++) {
+  for(i = 0; i <= n_nodes; i++) {
     printf("node %d\n", i);
     for(j = 0; j<n_channels; j++) {
       printf("channel %d: /proc/bus/pci/%x/%02x.%x\n", j+1, iMCs[i][j].bus_no, iMCs[i][j].device_no, iMCs[i][j].function_no);
