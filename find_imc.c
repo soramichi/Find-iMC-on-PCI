@@ -49,7 +49,7 @@ __attribute__((constructor)) static void warn() {
 
 #endif
 
-const int n_nodes_max = 8;             // normal ones, do not assume special machines like SGI or Cray
+const int n_nodes_max = 8; // normal machines, do not assume special ones like SGI or Cray
 
 void pci_read(int bus, int device, int function, off_t offset, void* data, size_t size){
   ssize_t ret;
@@ -116,7 +116,7 @@ int main() {
 	    iMCs[node][channel] = imc;
 
 	    channel++;
-	    // We assume that every channel of a node is populated.
+	    // We assume that every channel (not necessarily every DIMM slot) of a node is populated.
 	    // Otherwide, how do we know which node a channel belongs??
 	    if (channel == n_channels) {
 	      node++;
