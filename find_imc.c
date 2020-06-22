@@ -120,7 +120,8 @@ int main() {
     memset(iMCs[i], 0, sizeof(struct iMC) * n_channels_max);
   }
 
-  int channel_index[n_nodes_max]; // initizlied by 0s
+  int channel_index[n_nodes_max];
+  memset(channel_index, 0, sizeof(int) * n_nodes_max);
   int n_nodes = 0, n_channels = 0;
   for (bus = 0; bus < 256; bus++) {
     for (device = 0; device < 32; device++) {
